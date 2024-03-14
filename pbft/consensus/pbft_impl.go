@@ -149,7 +149,7 @@ func (state *State) Commit(commitMsg *VoteMsg) (*ReplyMsg, *RequestMsg, error) {
 		result := "Executed"
 
 		// Change the stage to prepared.
-		state.CurrentStage = Committed
+		// state.CurrentStage = Committed
 
 		return &ReplyMsg{
 			ViewID:    state.ViewID,
