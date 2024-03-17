@@ -40,11 +40,8 @@ time.sleep(2)
 # 定义要执行的 curl 命令来代替 PowerShell 命令
 curl_commands = [
     "curl -X POST -H 'Content-Type: application/json' -d '{\"clientID\":\"ahnhwi\",\"operation\":\"SendMes1\",\"timestamp\":859381532}' http://localhost:1111/req",
-    "curl -X POST -H 'Content-Type: application/json' -d '{\"clientID\":\"ahnhwi\",\"operation\":\"SendMes2\",\"timestamp\":859381532}' http://localhost:1116/req",
-    "curl -X POST -H 'Content-Type: application/json' -d '{\"clientID\":\"ahnhwi\",\"operation\":\"GetMyName\",\"timestamp\":859381532}' http://localhost:1121/req"
 ]
 
-# 其他代码保持不变...
 
 # 在 Tmux 会话中添加一个新窗口，用于执行 curl 命令
 curl_window_name = "curl-commands"
