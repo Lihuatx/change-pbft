@@ -139,11 +139,13 @@ func (node *Node) Reply(msg *consensus.ReplyMsg) error {
 		return err
 	}
 
+	testTime := time.Now()
+	fmt.Printf("程序运行了 %s\n", testTime)
+
 	// Client가 없으므로, 일단 Primary에게 보내는 걸로 처리.
 	send(node.NodeTable[node.View.Primary]+"/reply", jsonMsg)
+	send("127.0.0.1:5000/reply", jsonMsg)
 
-	// 重置节点状态等待下一次共识
-	// node.CurrentState.CurrentStage = consensus.Idle
 	return nil
 }
 
@@ -491,14 +493,14 @@ func (node *Node) routeMsgWhenAlarmed() []error {
 			copy(msgs, node.MsgBuffer.ReqMsgs)
 
 			node.MsgDelivery <- msgs
-			fmt.Printf("aaaaaaaaaaaaaaaaaaaaaaaalllllllllllaaaaaaaaaaaaaaaarrrrrrrrrrrrrrrrmmmmmmmmmmmmmmmmmmm\n")
+			fmt.Printf("[Alarm]--node.MsgBuffer.ReqMsgs\n")
 		}
 
 		// Check PrePrepareMsgs, send them.
 		if len(node.MsgBuffer.PrePrepareMsgs) != 0 {
 			msgs := make([]*consensus.PrePrepareMsg, len(node.MsgBuffer.PrePrepareMsgs))
 			copy(msgs, node.MsgBuffer.PrePrepareMsgs)
-			fmt.Printf("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\n")
+			fmt.Printf("[Alarm]--node.MsgBuffer.PrePrepareMsgs\n")
 			for _, value := range msgs {
 				fmt.Printf("View ID %d", value.ViewID)
 			}
@@ -511,7 +513,7 @@ func (node *Node) routeMsgWhenAlarmed() []error {
 			if len(node.MsgBuffer.PrepareMsgs) != 0 {
 				msgs := make([]*consensus.VoteMsg, len(node.MsgBuffer.PrepareMsgs))
 				copy(msgs, node.MsgBuffer.PrepareMsgs)
-				fmt.Printf("cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\n")
+				fmt.Printf("[Alarm]--node.MsgBuffer.prepareMsgs\n")
 
 				node.MsgDelivery <- msgs
 			}
@@ -520,7 +522,7 @@ func (node *Node) routeMsgWhenAlarmed() []error {
 			if len(node.MsgBuffer.CommitMsgs) != 0 {
 				msgs := make([]*consensus.VoteMsg, len(node.MsgBuffer.CommitMsgs))
 				copy(msgs, node.MsgBuffer.CommitMsgs)
-				fmt.Printf("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\n")
+				fmt.Printf("[Alarm]--node.MsgBuffer.CommitMsgs\n")
 
 				node.MsgDelivery <- msgs
 			}

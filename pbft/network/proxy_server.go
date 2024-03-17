@@ -46,7 +46,13 @@ func (server *Server) getReq(writer http.ResponseWriter, request *http.Request) 
 		fmt.Println(err)
 		return
 	}
+	// 保存请求的URL到RequestMsg中
+	msg.ClientAddr = request.RemoteAddr
+	// 获取客户端地址
+	clientAddr := request.RemoteAddr
 
+	// 打印客户端地址和请求的URL
+	fmt.Printf("客户端地址: %s\n", clientAddr)
 	server.node.MsgEntrance <- &msg
 }
 
