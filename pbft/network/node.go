@@ -139,9 +139,6 @@ func (node *Node) Reply(msg *consensus.ReplyMsg) error {
 		return err
 	}
 
-	testTime := time.Now()
-	fmt.Printf("程序运行了 %s\n", testTime)
-
 	// Client가 없으므로, 일단 Primary에게 보내는 걸로 처리.
 	send(node.NodeTable[node.View.Primary]+"/reply", jsonMsg)
 	send("127.0.0.1:5000/reply", jsonMsg)
