@@ -12,7 +12,7 @@ subprocess.run(['go', 'build', '-o', 'app'])
 print("Waiting for build to finish...")
 time.sleep(1)
 
-subprocess.run(['tmux', 'new-session', '-d', '-s', 'mySession'])
+subprocess.run(['tmux', 'new-session', '-d', '-s', 'mySession1'])
 
 # 定义要在新终端中执行的命令及其参数
 commands = [
@@ -39,5 +39,5 @@ curl_commands = [
 ]
 
 for curl_command in curl_commands:
-    tmux_command = f"tmux send-keys -t mySession '{curl_command}' C-m"
+    tmux_command = f"tmux send-keys -t mySession1 '{curl_command}' C-m"
     subprocess.run(['bash', '-c', tmux_command])
