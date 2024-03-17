@@ -88,6 +88,7 @@ func NewNode(nodeID string) *Node {
 
 	node.rsaPubKey = node.getPubKey(nodeID)
 	node.rsaPrivKey = node.getPivKey(nodeID)
+	node.CurrentState = consensus.CreateState(node.View.ID, -2)
 
 	// Start message dispatcher
 	go node.dispatchMsg()
@@ -327,8 +328,8 @@ func (node *Node) GetReply(msg *consensus.ReplyMsg) {
 
 func (node *Node) createStateForNewConsensus(goOn bool) error {
 	// Check if there is an ongoing consensus process.
-	if node.CurrentState != nil {
-		if node.CurrentState.CurrentStage != consensus.Committed && !goOn {
+	if node.CurrentState.LastSequenceID != -2 {
+		if node.CurrentState.CurrentStage != consensus.Committed && !goOn && node.CurrentState.CurrentStage != consensus.GetRequest {
 			return errors.New("another consensus is ongoing")
 		}
 	}
@@ -371,7 +372,7 @@ func (node *Node) dispatchMsg() {
 func (node *Node) routeMsg(msg interface{}) []error {
 	switch msg.(type) {
 	case *consensus.RequestMsg:
-		if node.CurrentState == nil || node.CurrentState.CurrentStage == consensus.Committed { //一开始没有进行共识的时候，此时 currentstate 为nil
+		if node.CurrentState.LastSequenceID == -2 || node.CurrentState.CurrentStage == consensus.Committed { //一开始没有进行共识的时候，此时 currentstate 为nil
 			// Copy buffered messages first.
 			msgs := make([]*consensus.RequestMsg, len(node.MsgBuffer.ReqMsgs))
 			copy(msgs, node.MsgBuffer.ReqMsgs)
@@ -392,7 +393,7 @@ func (node *Node) routeMsg(msg interface{}) []error {
 		}
 		fmt.Printf("                    request buffer %d\n", len(node.MsgBuffer.ReqMsgs))
 	case *consensus.PrePrepareMsg:
-		if node.CurrentState == nil || node.CurrentState.CurrentStage == consensus.Committed {
+		if node.CurrentState.LastSequenceID == -2 || node.CurrentState.CurrentStage == consensus.Committed {
 			// Copy buffered messages first.
 			node.PrepreMsgBufLock.Lock()
 			msgs := make([]*consensus.PrePrepareMsg, len(node.MsgBuffer.PrePrepareMsgs))
@@ -417,7 +418,7 @@ func (node *Node) routeMsg(msg interface{}) []error {
 			// if node.CurrentState == nil || node.CurrentState.CurrentStage != consensus.PrePrepared
 			// 这样的写法会导致当当前节点已经收到2f个节点进入committed阶段时，就会把后来收到的Preprepare消息放到缓冲区中，
 			// 这样在下次共识又到prePrepare阶段时就会先去处理上一轮共识的prePrepare协议！
-			if node.CurrentState == nil || node.CurrentState.CurrentStage != consensus.PrePrepared {
+			if node.CurrentState.LastSequenceID == -2 || node.CurrentState.CurrentStage != consensus.PrePrepared {
 				node.MsgBuffer.PrepareMsgs = append(node.MsgBuffer.PrepareMsgs, msg.(*consensus.VoteMsg))
 			} else {
 				// Copy buffered messages first.
@@ -444,7 +445,7 @@ func (node *Node) routeMsg(msg interface{}) []error {
 
 			}
 		} else if msg.(*consensus.VoteMsg).MsgType == consensus.CommitMsg {
-			if node.CurrentState == nil || node.CurrentState.CurrentStage != consensus.Prepared {
+			if node.CurrentState.LastSequenceID == -2 || node.CurrentState.CurrentStage != consensus.Prepared {
 				node.MsgBuffer.CommitMsgs = append(node.MsgBuffer.CommitMsgs, msg.(*consensus.VoteMsg))
 			} else {
 				// Copy buffered messages first.
@@ -476,14 +477,14 @@ func (node *Node) routeMsg(msg interface{}) []error {
 	return nil
 }
 
+var lastViewId int64
+
 func (node *Node) routeMsgWhenAlarmed() []error {
-	if len(node.MsgEntrance) == 5 {
-		fmt.Printf("MsgEntrance chan is Fulled\n")
+	if node.View.ID != lastViewId {
+		fmt.Printf("                                                                View ID %d\n", node.View.ID)
+		lastViewId = node.View.ID
 	}
-	if len(node.MsgDelivery) == 5 {
-		fmt.Printf("MsgDeliveru chan is Fulled\n")
-	}
-	if node.CurrentState == nil || node.CurrentState.CurrentStage == consensus.Committed {
+	if node.CurrentState.LastSequenceID == -2 || node.CurrentState.CurrentStage == consensus.Committed {
 		// Check ReqMsgs, send them.
 		if len(node.MsgBuffer.ReqMsgs) != 0 {
 			msgs := make([]*consensus.RequestMsg, len(node.MsgBuffer.ReqMsgs))

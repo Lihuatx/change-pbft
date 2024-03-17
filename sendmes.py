@@ -13,4 +13,4 @@ for i in range(20):
     """
 
     subprocess.Popen(['powershell', '-Command', ps_command])
-    time.sleep(0.1)
+
