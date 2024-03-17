@@ -16,10 +16,10 @@ subprocess.run(['tmux', 'new-session', '-d', '-s', 'mySession'])
 
 # 定义要在新终端中执行的命令及其参数
 commands = [
-    ('app.exe', 'N0'),
-    ('app.exe', 'N1'),
-    ('app.exe', 'N2'),
-    ('app.exe', 'N3'),
+    ('app', 'N0'),
+    ('app', 'N1'),
+    ('app', 'N2'),
+    ('app', 'N3'),
 
 ]
 
