@@ -39,7 +39,7 @@ time.sleep(2)
 
 # 定义要执行的 curl 命令来代替 PowerShell 命令
 curl_commands = [
-    "curl -X POST -H 'Content-Type: application/json' -d '{\"clientID\":\"ahnhwi\",\"operation\":\"SendMes1\",\"timestamp\":859381532}' http://localhost:1111/req",
+    "curl -H 'Content-Type: application/json' -X POST -d '{\"clientID\":\"ahnhwi\",\"operation\":\"GetMyName\",\"timestamp\":859381532}' http://localhost:1111/req",
 ]
 
 
