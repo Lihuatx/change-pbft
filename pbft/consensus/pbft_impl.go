@@ -27,7 +27,7 @@ const (
 	PrePrepared              // The ReqMsgs is processed successfully. The node is ready to head to the Prepare stage.
 	Prepared                 // Same with `prepared` stage explained in the original paper.
 	Committed
-	GetRequest
+	GetRequest // Same with `committed-local` stage explained in the original paper.
 )
 
 // f: # of Byzantine faulty node
@@ -52,6 +52,7 @@ func CreateState(viewID int64, lastSequenceID int64) *State {
 func (state *State) StartConsensus(request *RequestMsg) (*PrePrepareMsg, error) {
 	// `sequenceID` will be the index of this message.
 	sequenceID := time.Now().UnixNano()
+	// fmt.Printf("test import where")
 	// Find the unique and largest number for the sequence ID
 	if state.LastSequenceID != -1 {
 		for state.LastSequenceID >= sequenceID {

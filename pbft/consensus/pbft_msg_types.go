@@ -5,7 +5,6 @@ type RequestMsg struct {
 	ClientID   string `json:"clientID"`
 	Operation  string `json:"operation"`
 	SequenceID int64  `json:"sequenceID"`
-	ClientAddr string `json:"clientAddr"` // 用于存储客户端地址
 }
 
 type ReplyMsg struct {

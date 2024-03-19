@@ -14,9 +14,6 @@ type Server struct {
 	node *Node
 }
 
-var Count int64
-var test_flag bool
-
 func NewServer(nodeID string) *Server {
 	node := NewNode(nodeID)
 	server := &Server{node.NodeTable[nodeID], node}
@@ -45,24 +42,19 @@ func (server *Server) setRoute() {
 func (server *Server) getReq(writer http.ResponseWriter, request *http.Request) {
 	var msg consensus.RequestMsg
 	err := json.NewDecoder(request.Body).Decode(&msg)
-	if !test_flag {
-		fmt.Printf("Start testing \n")
-		start_time = time.Now()
-		test_flag = true
-	}
 	// for test
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	// 保存请求的URL到RequestMsg中
-	msg.ClientAddr = request.RemoteAddr
 	// 获取客户端地址
-	// clientAddr := request.RemoteAddr
 
-	// 打印客户端地址和请求的URL
-	fmt.Printf("\nhttp get RequestMsg ID : %d\n", msg.Timestamp)
 	server.node.MsgEntrance <- &msg
+	//server.node.MsgBufferLock.ReqMsgsLock.Lock()
+	//server.node.MsgBuffer.ReqMsgs = append(server.node.MsgBuffer.ReqMsgs, msg)
+	//server.node.MsgBufferLock.ReqMsgsLock.Unlock()
+	time.Sleep(100 * time.Millisecond) // 程序暂停50毫秒
 }
 
 func (server *Server) getPrePrepare(writer http.ResponseWriter, request *http.Request) {
@@ -73,8 +65,13 @@ func (server *Server) getPrePrepare(writer http.ResponseWriter, request *http.Re
 		fmt.Println(err)
 		return
 	}
-
+	fmt.Printf("Got PrePrepare %d", msg.ViewID, msg.NodeID, msg.SequenceID)
 	server.node.MsgEntrance <- &msg
+	//server.node.MsgBufferLock.PrePrepareMsgsLock.Lock()
+	//server.node.MsgBuffer.PrePrepareMsgs = append(server.node.MsgBuffer.PrePrepareMsgs, msg)
+	//server.node.MsgBufferLock.PrePrepareMsgsLock.Unlock()
+	//time.Sleep(50 * time.Millisecond) // 程序暂停50毫秒
+
 }
 
 func (server *Server) getPrepare(writer http.ResponseWriter, request *http.Request) {
@@ -86,6 +83,11 @@ func (server *Server) getPrepare(writer http.ResponseWriter, request *http.Reque
 	}
 
 	server.node.MsgEntrance <- &msg
+	//server.node.MsgBufferLock.PrepareMsgsLock.Lock()
+	//server.node.MsgBuffer.PrepareMsgs = append(server.node.MsgBuffer.PrepareMsgs, msg)
+	//server.node.MsgBufferLock.PrepareMsgsLock.Unlock()
+	//time.Sleep(50 * time.Millisecond) // 程序暂停50毫秒
+
 }
 
 func (server *Server) getCommit(writer http.ResponseWriter, request *http.Request) {
@@ -97,6 +99,11 @@ func (server *Server) getCommit(writer http.ResponseWriter, request *http.Reques
 	}
 
 	server.node.MsgEntrance <- &msg
+	//server.node.MsgBufferLock.CommitMsgsLock.Lock()
+	//server.node.MsgBuffer.CommitMsgs = append(server.node.MsgBuffer.CommitMsgs, msg)
+	//server.node.MsgBufferLock.CommitMsgsLock.Unlock()
+	//time.Sleep(50 * time.Millisecond) // 程序暂停50毫秒
+
 }
 
 func (server *Server) getReply(writer http.ResponseWriter, request *http.Request) {
@@ -113,5 +120,4 @@ func (server *Server) getReply(writer http.ResponseWriter, request *http.Request
 func send(url string, msg []byte) {
 	buff := bytes.NewBuffer(msg)
 	http.Post("http://"+url, "application/json", buff)
-
 }
