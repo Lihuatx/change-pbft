@@ -20,15 +20,16 @@ import (
 )
 
 type Node struct {
-	NodeID        string
-	NodeTable     map[string]string // key=nodeID, value=url
-	View          *View
-	CurrentState  *consensus.State
-	CommittedMsgs []*consensus.RequestMsg // kinda block.
-	MsgBuffer     *MsgBuffer
-	MsgEntrance   chan interface{}
-	MsgDelivery   chan interface{}
-	Alarm         chan bool
+	NodeID         string
+	NodeTable      map[string]string // key=nodeID, value=url
+	View           *View
+	CurrentState   *consensus.State
+	CommittedMsgs  []*consensus.RequestMsg // kinda block.
+	MsgBuffer      *MsgBuffer
+	MsgEntrance    chan interface{}
+	MsgDelivery    chan interface{}
+	MsgRequsetchan chan interface{}
+	Alarm          chan bool
 	// 请求消息的锁
 	MsgBufferLock *MsgBufferLock
 
@@ -92,14 +93,17 @@ func NewNode(nodeID string) *Node {
 		},
 		MsgBufferLock: &MsgBufferLock{},
 		// Channels
-		MsgEntrance: make(chan interface{}, 30),
-		MsgDelivery: make(chan interface{}, 10),
-		Alarm:       make(chan bool),
+		MsgEntrance:    make(chan interface{}, 30),
+		MsgDelivery:    make(chan interface{}, 10),
+		MsgRequsetchan: make(chan interface{}, 100),
+		Alarm:          make(chan bool),
 	}
 
 	node.rsaPubKey = node.getPubKey(nodeID)
 	node.rsaPrivKey = node.getPivKey(nodeID)
 	node.CurrentState = consensus.CreateState(node.View.ID, -2)
+	// 专门用于收取客户端请求,防止堵塞其他线程
+	go node.resolveClientRequest()
 
 	// Start message dispatcher
 	go node.dispatchMsg()
@@ -370,14 +374,36 @@ func (node *Node) dispatchMsg() {
 	}
 }
 
-func (node *Node) routeMsg(msg interface{}) []error {
+func (node *Node) SaveClientRequest(msg interface{}) {
 	switch msg.(type) {
 	case *consensus.RequestMsg:
+
 		//一开始没有进行共识的时候，此时 currentstate 为nil
 		node.MsgBufferLock.ReqMsgsLock.Lock()
 		node.MsgBuffer.ReqMsgs = append(node.MsgBuffer.ReqMsgs, msg.(*consensus.RequestMsg))
 		node.MsgBufferLock.ReqMsgsLock.Unlock()
-		fmt.Printf("                    Msgbuffer %d %d %d %d\n", len(node.MsgBuffer.ReqMsgs), len(node.MsgBuffer.PrePrepareMsgs), len(node.MsgBuffer.PrepareMsgs), len(node.MsgBuffer.CommitMsgs))
+		fmt.Printf("收到 %d 条客户端请求\n", len(node.MsgBuffer.ReqMsgs))
+	}
+}
+
+func (node *Node) resolveClientRequest() {
+	for {
+		select {
+		case msg := <-node.MsgRequsetchan:
+			node.SaveClientRequest(msg)
+			//time.Sleep(50 * time.Millisecond) // 程序暂停100毫秒
+		}
+	}
+}
+
+func (node *Node) routeMsg(msg interface{}) []error {
+	switch msg.(type) {
+	//case *consensus.RequestMsg:
+	//	//一开始没有进行共识的时候，此时 currentstate 为nil
+	//	node.MsgBufferLock.ReqMsgsLock.Lock()
+	//	node.MsgBuffer.ReqMsgs = append(node.MsgBuffer.ReqMsgs, msg.(*consensus.RequestMsg))
+	//	node.MsgBufferLock.ReqMsgsLock.Unlock()
+	//	fmt.Printf("                    Msgbuffer %d %d %d %d\n", len(node.MsgBuffer.ReqMsgs), len(node.MsgBuffer.PrePrepareMsgs), len(node.MsgBuffer.PrepareMsgs), len(node.MsgBuffer.CommitMsgs))
 
 	case *consensus.PrePrepareMsg:
 
