@@ -6,12 +6,16 @@ import (
 	"fmt"
 	"net/http"
 	"simple_pbft/pbft/consensus"
+	"time"
 )
 
 type Server struct {
 	url  string
 	node *Node
 }
+
+var Count int64
+var test_flag bool
 
 func NewServer(nodeID string) *Server {
 	node := NewNode(nodeID)
@@ -41,6 +45,11 @@ func (server *Server) setRoute() {
 func (server *Server) getReq(writer http.ResponseWriter, request *http.Request) {
 	var msg consensus.RequestMsg
 	err := json.NewDecoder(request.Body).Decode(&msg)
+	if !test_flag {
+		fmt.Printf("Start testing \n")
+		start_time = time.Now()
+		test_flag = true
+	}
 	// for test
 	if err != nil {
 		fmt.Println(err)
@@ -49,10 +58,10 @@ func (server *Server) getReq(writer http.ResponseWriter, request *http.Request) 
 	// 保存请求的URL到RequestMsg中
 	msg.ClientAddr = request.RemoteAddr
 	// 获取客户端地址
-	clientAddr := request.RemoteAddr
+	// clientAddr := request.RemoteAddr
 
 	// 打印客户端地址和请求的URL
-	fmt.Printf("客户端地址: %s\n", clientAddr)
+	fmt.Printf("\nhttp get RequestMsg ID : %d\n", msg.Timestamp)
 	server.node.MsgEntrance <- &msg
 }
 
@@ -104,4 +113,5 @@ func (server *Server) getReply(writer http.ResponseWriter, request *http.Request
 func send(url string, msg []byte) {
 	buff := bytes.NewBuffer(msg)
 	http.Post("http://"+url, "application/json", buff)
+
 }

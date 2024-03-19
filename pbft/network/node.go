@@ -31,7 +31,8 @@ type Node struct {
 	// 请求消息的锁
 	ReqMsgBufLock    sync.Mutex
 	PrepreMsgBufLock sync.Mutex
-
+	PreMsgbufLock    sync.Mutex
+	ComMsgbufLock    sync.Mutex
 	//RSA私钥
 	rsaPrivKey []byte
 	//RSA公钥
@@ -50,6 +51,8 @@ type View struct {
 	Primary string
 }
 
+var start_time time.Time
+
 const ResolvingTimeDuration = time.Millisecond * 1000 // 1 second.
 
 func NewNode(nodeID string) *Node {
@@ -64,6 +67,16 @@ func NewNode(nodeID string) *Node {
 			"N2": "localhost:1113",
 			"N3": "localhost:1114",
 			"N4": "localhost:1115",
+			"N5": "localhost:1116",
+			"N6": "localhost:1117",
+			"N7": "localhost:1118",
+			"N8": "localhost:1119",
+			//"N9":  "localhost:1120",
+			//"N10": "localhost:1121",
+			//"N11": "localhost:1122",
+			//"N12": "localhost:1123",
+			//"N13": "localhost:1124",
+			//"N14": "localhost:1125",
 		},
 		View: &View{
 			ID:      viewID,
@@ -81,8 +94,8 @@ func NewNode(nodeID string) *Node {
 		},
 
 		// Channels
-		MsgEntrance: make(chan interface{}, 5),
-		MsgDelivery: make(chan interface{}, 5),
+		MsgEntrance: make(chan interface{}, 30),
+		MsgDelivery: make(chan interface{}, 30),
 		Alarm:       make(chan bool),
 	}
 
@@ -132,17 +145,22 @@ func (node *Node) Reply(msg *consensus.ReplyMsg) error {
 		fmt.Printf("Committed value: %s, %d, %s, %d", value.ClientID, value.Timestamp, value.Operation, value.SequenceID)
 	}
 	fmt.Print("\n")
-
 	node.View.ID++
+	Count = node.View.ID
+	const viewID = 10000000000 // temporary.
 
-	jsonMsg, err := json.Marshal(msg)
-	if err != nil {
-		return err
+	if (Count - viewID) == 120 {
+		duration := time.Since(start_time)
+		fmt.Printf("Your Function took %s for %d work\n", duration, Count)
 	}
+	//jsonMsg, err := json.Marshal(msg)
+	//if err != nil {
+	//	return err
+	//}
 
 	// Client가 없으므로, 일단 Primary에게 보내는 걸로 처리.
-	send(node.NodeTable[node.View.Primary]+"/reply", jsonMsg)
-	send("127.0.0.1:5000/reply", jsonMsg)
+	//send(node.NodeTable[node.View.Primary]+"/reply", jsonMsg)
+	//send("127.0.0.1:5000/reply", jsonMsg)
 
 	return nil
 }
@@ -193,11 +211,10 @@ func (node *Node) GetPrePrepare(prePrepareMsg *consensus.PrePrepareMsg, goOn boo
 	if err != nil {
 		return err
 	}
-	// fmt.Printf("get Pre\n")
-	digest, _ := hex.DecodeString(prePrepareMsg.Digest)
-	if !node.RsaVerySignWithSha256(digest, prePrepareMsg.Sign, node.getPubKey(prePrepareMsg.NodeID)) {
-		fmt.Println("节点签名验证失败！,拒绝执行Preprepare")
-	}
+	//digest, _ := hex.DecodeString(prePrepareMsg.Digest)
+	//if !node.RsaVerySignWithSha256(digest, prePrepareMsg.Sign, node.getPubKey(prePrepareMsg.NodeID)) {
+	//	fmt.Println("节点签名验证失败！,拒绝执行Preprepare")
+	//}
 	prePareMsg, err := node.CurrentState.PrePrepare(prePrepareMsg)
 	if err != nil {
 		return err
@@ -206,12 +223,13 @@ func (node *Node) GetPrePrepare(prePrepareMsg *consensus.PrePrepareMsg, goOn boo
 	if prePareMsg != nil {
 		// Attach node ID to the message 同时对摘要签名
 		prePareMsg.NodeID = node.NodeID
-		signInfo := node.RsaSignWithSha256(digest, node.rsaPrivKey)
-		prePareMsg.Sign = signInfo
+		//signInfo := node.RsaSignWithSha256(digest, node.rsaPrivKey)
+		//prePareMsg.Sign = signInfo
 
 		LogStage("Pre-prepare", true)
 		node.Broadcast(prePareMsg, "/prepare")
 		LogStage("Prepare", false)
+		// 如果buffer中已经存在其他节点传来的当前阶段的Prepare消息，直接接着执行
 	}
 
 	return nil
@@ -220,10 +238,10 @@ func (node *Node) GetPrePrepare(prePrepareMsg *consensus.PrePrepareMsg, goOn boo
 func (node *Node) GetPrepare(prepareMsg *consensus.VoteMsg) error {
 	LogMsg(prepareMsg)
 
-	digest, _ := hex.DecodeString(prepareMsg.Digest)
-	if !node.RsaVerySignWithSha256(digest, prepareMsg.Sign, node.getPubKey(prepareMsg.NodeID)) {
-		fmt.Println("节点签名验证失败！,拒绝执行prepare")
-	}
+	//digest, _ := hex.DecodeString(prepareMsg.Digest)
+	//if !node.RsaVerySignWithSha256(digest, prepareMsg.Sign, node.getPubKey(prepareMsg.NodeID)) {
+	//	fmt.Println("节点签名验证失败！,拒绝执行prepare")
+	//}
 
 	commitMsg, err := node.CurrentState.Prepare(prepareMsg)
 	if err != nil {
@@ -233,12 +251,13 @@ func (node *Node) GetPrepare(prepareMsg *consensus.VoteMsg) error {
 	if commitMsg != nil {
 		// Attach node ID to the message 同时对摘要签名
 		commitMsg.NodeID = node.NodeID
-		signInfo := node.RsaSignWithSha256(digest, node.rsaPrivKey)
-		commitMsg.Sign = signInfo
+		//signInfo := node.RsaSignWithSha256(digest, node.rsaPrivKey)
+		//commitMsg.Sign = signInfo
 
 		LogStage("Prepare", true)
 		node.Broadcast(commitMsg, "/commit")
 		LogStage("Commit", false)
+
 	}
 
 	return nil
@@ -252,10 +271,10 @@ func (node *Node) GetCommit(commitMsg *consensus.VoteMsg) error {
 
 	LogMsg(commitMsg)
 
-	digest, _ := hex.DecodeString(commitMsg.Digest)
-	if !node.RsaVerySignWithSha256(digest, commitMsg.Sign, node.getPubKey(commitMsg.NodeID)) {
-		fmt.Println("节点签名验证失败！,拒绝执行commit")
-	}
+	//digest, _ := hex.DecodeString(commitMsg.Digest)
+	//if !node.RsaVerySignWithSha256(digest, commitMsg.Sign, node.getPubKey(commitMsg.NodeID)) {
+	//	fmt.Println("节点签名验证失败！,拒绝执行commit")
+	//}
 
 	replyMsg, committedMsg, err := node.CurrentState.Commit(commitMsg)
 	if err != nil {
@@ -373,6 +392,7 @@ func (node *Node) routeMsg(msg interface{}) []error {
 	switch msg.(type) {
 	case *consensus.RequestMsg:
 		if node.CurrentState.LastSequenceID == -2 || node.CurrentState.CurrentStage == consensus.Committed { //一开始没有进行共识的时候，此时 currentstate 为nil
+			node.CurrentState.CurrentStage = consensus.GetRequest
 			// Copy buffered messages first.
 			msgs := make([]*consensus.RequestMsg, len(node.MsgBuffer.ReqMsgs))
 			copy(msgs, node.MsgBuffer.ReqMsgs)
@@ -384,6 +404,7 @@ func (node *Node) routeMsg(msg interface{}) []error {
 			node.ReqMsgBufLock.Lock()
 			node.MsgBuffer.ReqMsgs = make([]*consensus.RequestMsg, 0)
 			node.ReqMsgBufLock.Unlock()
+
 			// Send messages.
 			node.MsgDelivery <- msgs
 		} else {
@@ -418,6 +439,7 @@ func (node *Node) routeMsg(msg interface{}) []error {
 			// if node.CurrentState == nil || node.CurrentState.CurrentStage != consensus.PrePrepared
 			// 这样的写法会导致当当前节点已经收到2f个节点进入committed阶段时，就会把后来收到的Preprepare消息放到缓冲区中，
 			// 这样在下次共识又到prePrepare阶段时就会先去处理上一轮共识的prePrepare协议！
+			node.PreMsgbufLock.Lock()
 			if node.CurrentState.LastSequenceID == -2 || node.CurrentState.CurrentStage != consensus.PrePrepared {
 				node.MsgBuffer.PrepareMsgs = append(node.MsgBuffer.PrepareMsgs, msg.(*consensus.VoteMsg))
 			} else {
@@ -426,7 +448,7 @@ func (node *Node) routeMsg(msg interface{}) []error {
 				var msgSave []*consensus.VoteMsg
 				node.MsgBuffer.PrepareMsgs = append(node.MsgBuffer.PrepareMsgs, msg.(*consensus.VoteMsg))
 				copy(msgs, node.MsgBuffer.PrepareMsgs)
-
+				// 将大于当前View ID的请求放回buffer中
 				for _, value := range node.MsgBuffer.PrepareMsgs {
 					if value.ViewID == node.View.ID {
 						msgs = append(msgs, value)
@@ -444,7 +466,9 @@ func (node *Node) routeMsg(msg interface{}) []error {
 				node.MsgDelivery <- msgs
 
 			}
+			node.PreMsgbufLock.Unlock()
 		} else if msg.(*consensus.VoteMsg).MsgType == consensus.CommitMsg {
+			node.ComMsgbufLock.Lock()
 			if node.CurrentState.LastSequenceID == -2 || node.CurrentState.CurrentStage != consensus.Prepared {
 				node.MsgBuffer.CommitMsgs = append(node.MsgBuffer.CommitMsgs, msg.(*consensus.VoteMsg))
 			} else {
@@ -470,6 +494,7 @@ func (node *Node) routeMsg(msg interface{}) []error {
 				// Send messages.
 				node.MsgDelivery <- msgs
 			}
+			node.ComMsgbufLock.Unlock()
 		}
 
 	}
@@ -508,22 +533,62 @@ func (node *Node) routeMsgWhenAlarmed() []error {
 		switch node.CurrentState.CurrentStage {
 		case consensus.PrePrepared:
 			// Check PrepareMsgs, send them.
+			node.PreMsgbufLock.Lock()
 			if len(node.MsgBuffer.PrepareMsgs) != 0 {
 				msgs := make([]*consensus.VoteMsg, len(node.MsgBuffer.PrepareMsgs))
 				copy(msgs, node.MsgBuffer.PrepareMsgs)
 				fmt.Printf("[Alarm]--node.MsgBuffer.prepareMsgs\n")
-
-				node.MsgDelivery <- msgs
+				for _, value := range msgs {
+					fmt.Printf("View ID %d NodeID %s", value.ViewID, value.NodeID)
+				}
+				//var msgs []*consensus.VoteMsg
+				//var msgSave []*consensus.VoteMsg
+				//
+				//for _, value := range node.MsgBuffer.PrepareMsgs {
+				//	if value.ViewID == node.View.ID {
+				//		msgs = append(msgs, value)
+				//	} else if value.ViewID > node.View.ID {
+				//		msgSave = append(msgSave, value)
+				//	}
+				//
+				//}
+				//// Append a newly arrived message.
+				//// Empty the buffer.
+				//node.MsgBuffer.PrepareMsgs = msgSave
+				//
+				//// Send messages.
+				//node.MsgDelivery <- msgs
 			}
+			node.PreMsgbufLock.Unlock()
 		case consensus.Prepared:
 			// Check CommitMsgs, send them.
+			node.ComMsgbufLock.Lock()
 			if len(node.MsgBuffer.CommitMsgs) != 0 {
 				msgs := make([]*consensus.VoteMsg, len(node.MsgBuffer.CommitMsgs))
 				copy(msgs, node.MsgBuffer.CommitMsgs)
 				fmt.Printf("[Alarm]--node.MsgBuffer.CommitMsgs\n")
-
-				node.MsgDelivery <- msgs
+				for _, value := range msgs {
+					fmt.Printf("View ID %d NodeID %s", value.ViewID, value.NodeID)
+				}
+				//var msgs []*consensus.VoteMsg
+				//var msgSave []*consensus.VoteMsg
+				//
+				//for _, value := range node.MsgBuffer.CommitMsgs {
+				//	if value.ViewID == node.View.ID {
+				//		msgs = append(msgs, value)
+				//	} else if value.ViewID > node.View.ID {
+				//		msgSave = append(msgSave, value)
+				//	}
+				//
+				//}
+				//// Append a newly arrived message.
+				//// Empty the buffer.
+				//node.MsgBuffer.CommitMsgs = msgSave
+				//
+				//// Send messages.
+				//node.MsgDelivery <- msgs
 			}
+			node.ComMsgbufLock.Unlock()
 		}
 	}
 
@@ -556,7 +621,6 @@ func (node *Node) resolveMsg() {
 			if len(voteMsgs) == 0 {
 				break
 			}
-
 			if voteMsgs[0].MsgType == consensus.PrepareMsg {
 				errs := node.resolvePrepareMsg(voteMsgs)
 				if len(errs) != 0 {
@@ -592,20 +656,12 @@ func (node *Node) resolveRequestMsg(msgs []*consensus.RequestMsg) []error {
 	// Resolve messages
 	fmt.Printf("len RequestMsg msg %d\n", len(msgs))
 
+	if msgs[0].Operation == "end" {
+		fmt.Printf("一共处理了 %d 件请求\n", len(node.CommittedMsgs))
+	}
 	err := node.GetReq(msgs[0], false)
 	if err != nil {
 		return errs
-	}
-
-	if len(msgs) > 1 {
-		node.ReqMsgBufLock.Lock()
-		tempMsg := msgs[1:]
-		TempReqBuf := make([]*consensus.RequestMsg, len(node.MsgBuffer.ReqMsgs))
-		copy(TempReqBuf, node.MsgBuffer.ReqMsgs)
-		// Append a newly arrived message.
-		tempMsg = append(tempMsg, TempReqBuf...)
-		node.MsgBuffer.ReqMsgs = tempMsg
-		node.ReqMsgBufLock.Unlock()
 	}
 
 	return nil
@@ -622,6 +678,7 @@ func (node *Node) resolvePrePrepareMsg(msgs []*consensus.PrePrepareMsg) []error 
 		if prePrepareMsg.ViewID < node.View.ID {
 			continue
 		}
+
 		err := node.GetPrePrepare(prePrepareMsg, false)
 		if err != nil {
 			errs = append(errs, err)
@@ -637,18 +694,24 @@ func (node *Node) resolvePrePrepareMsg(msgs []*consensus.PrePrepareMsg) []error 
 
 func (node *Node) resolvePrepareMsg(msgs []*consensus.VoteMsg) []error {
 	errs := make([]error, 0)
-
+	node.PreMsgbufLock.Lock()
+	var msgSave []*consensus.VoteMsg
 	// Resolve messages
 	fmt.Printf("len PrepareMsg msg %d\n", len(msgs))
 	for _, prepareMsg := range msgs {
 		if prepareMsg.ViewID < node.View.ID {
 			continue
+		} else if prepareMsg.ViewID > node.View.ID {
+			msgSave = append(msgSave, prepareMsg)
 		}
 		err := node.GetPrepare(prepareMsg)
 		if err != nil {
 			errs = append(errs, err)
 		}
 	}
+	msgSave = append(msgSave, node.MsgBuffer.PrepareMsgs...)
+	node.MsgBuffer.PrepareMsgs = msgSave
+	node.PreMsgbufLock.Unlock()
 
 	if len(errs) != 0 {
 		return errs
@@ -661,20 +724,36 @@ func (node *Node) resolveCommitMsg(msgs []*consensus.VoteMsg) []error {
 	errs := make([]error, 0)
 
 	// Resolve messages
-	fmt.Printf("len CommitMsg msg %d node\n", len(msgs))
+	fmt.Printf("len CommitMsg msg %d\n", len(msgs))
+	node.ComMsgbufLock.Lock()
 
+	var msgSave []*consensus.VoteMsg
+
+	if node.CurrentState.CurrentStage != consensus.Prepared && false {
+		fmt.Printf("不在commit阶段，返回\n")
+		for _, commitMsg := range msgs {
+			if commitMsg.ViewID >= node.View.ID {
+				msgSave = append(msgSave, commitMsg)
+			}
+		}
+		msgSave = append(msgSave, node.MsgBuffer.CommitMsgs...)
+		node.MsgBuffer.CommitMsgs = msgSave
+		return nil
+	}
 	for _, commitMsg := range msgs {
 		if commitMsg.ViewID < node.View.ID {
 			continue
 		} else if commitMsg.ViewID > node.View.ID {
-
+			msgSave = append(msgSave, commitMsg)
 		}
 		err := node.GetCommit(commitMsg)
 		if err != nil {
 			errs = append(errs, err)
 		}
 	}
-
+	msgSave = append(msgSave, node.MsgBuffer.CommitMsgs...)
+	node.MsgBuffer.CommitMsgs = msgSave
+	node.ComMsgbufLock.Unlock()
 	if len(errs) != 0 {
 		return errs
 	}

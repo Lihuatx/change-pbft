@@ -12,4 +12,4 @@ REM 等待编译完成
 timeout /t 1 >nul
 
 REM 执行 python 命令
-python start.py
+python testthroughput.py

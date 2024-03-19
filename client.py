@@ -26,7 +26,7 @@ def send_message_and_receive_response():
         # 打印服务器的回复
         # print(f"服务器回复（消息 {i}）:", response.text)
         # 等待一段时间再发送下一条消息（如果需要）
-        time.sleep(0.1)
+        # time.sleep(0.1)
 
 @app.route('/reply', methods=['GET', 'POST'])
 def get_reply():

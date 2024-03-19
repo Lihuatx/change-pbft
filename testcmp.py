@@ -16,3 +16,4 @@ def compare_dirs(dir1, dir2):
 
 # 比较两个目录
 compare_dirs('D:\PostgraduateWORK\Go\PBFT - ordinary\PBFT\\network', 'D:\PostgraduateWORK\Go\PBFT\PBFT\\network')
+
