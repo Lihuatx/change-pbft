@@ -1,2 +1,7 @@
 
 
+durtion: 13.4646542s
+durtion: 12.3617425s
+durtion: 7.2726951s
+durtion: 27.2955401s
+durtion: 3.88943s

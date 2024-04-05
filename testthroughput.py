@@ -12,12 +12,10 @@ commands = [
     ('app.exe', 'N6'),
     ('app.exe', 'N7'),
     ('app.exe', 'N8'),
-    # ('app.exe', 'N9'),
-    # ('app.exe', 'N10'),
-    # ('app.exe', 'N11'),
-    # ('app.exe', 'N12'),
-    # ('app.exe', 'N13'),
-    # ('app.exe', 'N14'),
+    ('app.exe', 'N9'),
+    ('app.exe', 'N10'),
+    ('app.exe', 'N11'),
+    ('app.exe', 'N12'),
 ]
 
 # 遍历命令和参数，然后在新的命令提示符窗口中执行
@@ -26,19 +24,19 @@ for exe, arg1 in commands:
     command = f'start cmd /k "{exe}" {arg1}'
     subprocess.Popen(command, shell=True)
 
-time.sleep(4)
+time.sleep(6)
 
 # 定义第五个终端要执行的PowerShell命令
 ps_command = """
 $headers = @{ "Content-Type" = "application/json" }
 $body = '{"clientID":"ahnhwi","operation":"GetMyName","timestamp":859381532}'
-$response = Invoke-WebRequest -Uri "http://localhost:1111/req" -Method POST -Headers $headers -Body $body
+$response = Invoke-WebRequest -Uri "http://localhost:1110/req" -Method POST -Headers $headers -Body $body
 """
 # 定义第五个终端要执行的PowerShell命令
 start_command = """
 $headers = @{ "Content-Type" = "application/json" }
 $body = '{"clientID":"ahnhwi","operation":"start","timestamp":859381532}'
-$response = Invoke-WebRequest -Uri "http://localhost:1111/req" -Method POST -Headers $headers -Body $body
+$response = Invoke-WebRequest -Uri "http://localhost:1110/req" -Method POST -Headers $headers -Body $body
 """
 
 print("Start testing")
@@ -58,14 +56,14 @@ print("Start testing")
 end_time = time.time() + 5
 begin = False
 cnt = 0
-while cnt < 330:
+while cnt < 1:
     cnt+=1
     ps_command = f"""
     $headers = @{{ "Content-Type" = "application/json" }}
     $body = '{{"clientID":"ahnhwi","operation":"GetMyName","timestamp":{cnt}}}'
-    $response = Invoke-WebRequest -Uri "http://localhost:1111/req" -Method POST -Headers $headers -Body $body
+    $response = Invoke-WebRequest -Uri "http://localhost:1110/req" -Method POST -Headers $headers -Body $body
     """
-    if cnt == 330:
+    if cnt == 1:
         break
     if begin == False :
         subprocess.Popen(['powershell', '-Command', start_command])
@@ -77,7 +75,7 @@ print(cnt)
 end_command = """
 $headers = @{ "Content-Type" = "application/json" }
 $body = '{"clientID":"ahnhwi","operation":"end","timestamp":859381532}'
-$response = Invoke-WebRequest -Uri "http://localhost:1111/req" -Method POST -Headers $headers -Body $body
+$response = Invoke-WebRequest -Uri "http://localhost:1110/req" -Method POST -Headers $headers -Body $body
 """
 
 subprocess.Popen(['powershell', '-Command', end_command])

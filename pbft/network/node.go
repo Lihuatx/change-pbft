@@ -1,6 +1,7 @@
 package network
 
 import (
+	"bufio"
 	"crypto"
 	"crypto/rand"
 	"crypto/rsa"
@@ -15,6 +16,7 @@ import (
 	"log"
 	"os"
 	"simple_pbft/pbft/consensus"
+	"strings"
 	"sync"
 	"time"
 )
@@ -66,17 +68,7 @@ func NewNode(nodeID string) *Node {
 	node := &Node{
 		// Hard-coded for test.
 		NodeID: nodeID,
-		NodeTable: map[string]string{
-			"N0": "localhost:1111",
-			"N1": "localhost:1112",
-			"N2": "localhost:1113",
-			"N3": "localhost:1114",
-			"N4": "localhost:1115",
-			"N5": "localhost:1116",
-			"N6": "localhost:1117",
-			"N7": "localhost:1118",
-			"N8": "localhost:1119",
-		},
+
 		View: &View{
 			ID:      viewID,
 			Primary: "N0",
@@ -99,6 +91,8 @@ func NewNode(nodeID string) *Node {
 		Alarm:          make(chan bool),
 	}
 
+	node.NodeTable = LoadNodeTable("nodetable.txt")
+
 	node.rsaPubKey = node.getPubKey(nodeID)
 	node.rsaPrivKey = node.getPivKey(nodeID)
 	node.CurrentState = consensus.CreateState(node.View.ID, -2)
@@ -115,6 +109,33 @@ func NewNode(nodeID string) *Node {
 	go node.resolveMsg()
 
 	return node
+}
+
+// LoadNodeTable 从指定的文件路径加载 NodeTable
+func LoadNodeTable(filePath string) map[string]string {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil
+	}
+	defer file.Close()
+
+	// 初始化 NodeTable
+	nodeTable := make(map[string]string)
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		parts := strings.Fields(scanner.Text())
+		if len(parts) == 3 {
+			_, nodeID, address := parts[0], parts[1], parts[2]
+			nodeTable[nodeID] = address
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil
+	}
+
+	return nodeTable
 }
 
 func (node *Node) Broadcast(msg interface{}, path string) map[string]error {
@@ -155,9 +176,9 @@ func (node *Node) Reply(msg *consensus.ReplyMsg) error {
 	node.View.ID++
 	fmt.Printf("View ID: %d\n", node.View.ID)
 
-	if node.View.ID == 10000000100 && node.NodeID == node.View.Primary {
-		start = time.Now()
-	} else if node.View.ID == 10000000320 && node.NodeID == node.View.Primary {
+	if node.View.ID == 10000000001 && node.NodeID == node.View.Primary {
+
+	} else if node.View.ID == 10000000050 && node.NodeID == node.View.Primary {
 		duration := time.Since(start)
 		// 打开文件，如果文件不存在则创建，如果文件存在则追加内容
 		fmt.Printf("Function took %s\n", duration)
@@ -357,7 +378,7 @@ func (node *Node) dispatchMsg() {
 	for {
 		select {
 		case msg := <-node.MsgEntrance:
-			fmt.Printf("Send node.MsgEntrance  ")
+			//fmt.Printf("Send node.MsgEntrance  ")
 			err := node.routeMsg(msg)
 			if err != nil {
 				fmt.Println(err)
@@ -382,7 +403,7 @@ func (node *Node) SaveClientRequest(msg interface{}) {
 		node.MsgBufferLock.ReqMsgsLock.Lock()
 		node.MsgBuffer.ReqMsgs = append(node.MsgBuffer.ReqMsgs, msg.(*consensus.RequestMsg))
 		node.MsgBufferLock.ReqMsgsLock.Unlock()
-		fmt.Printf("收到 %d 条客户端请求\n", len(node.MsgBuffer.ReqMsgs))
+		fmt.Printf("缓存中收到 %d 条客户端请求\n", len(node.MsgBuffer.ReqMsgs))
 	}
 }
 
@@ -410,7 +431,7 @@ func (node *Node) routeMsg(msg interface{}) []error {
 		node.MsgBufferLock.PrePrepareMsgsLock.Lock()
 		node.MsgBuffer.PrePrepareMsgs = append(node.MsgBuffer.PrePrepareMsgs, msg.(*consensus.PrePrepareMsg))
 		node.MsgBufferLock.PrePrepareMsgsLock.Unlock()
-		fmt.Printf("                    Msgbuffer %d %d %d %d\n", len(node.MsgBuffer.ReqMsgs), len(node.MsgBuffer.PrePrepareMsgs), len(node.MsgBuffer.PrepareMsgs), len(node.MsgBuffer.CommitMsgs))
+		//fmt.Printf("                    Msgbuffer %d %d %d %d\n", len(node.MsgBuffer.ReqMsgs), len(node.MsgBuffer.PrePrepareMsgs), len(node.MsgBuffer.PrepareMsgs), len(node.MsgBuffer.CommitMsgs))
 
 	case *consensus.VoteMsg:
 		if msg.(*consensus.VoteMsg).MsgType == consensus.PrepareMsg {
@@ -426,7 +447,7 @@ func (node *Node) routeMsg(msg interface{}) []error {
 			node.MsgBufferLock.CommitMsgsLock.Unlock()
 		}
 
-		fmt.Printf("                    Msgbuffer %d %d %d %d\n", len(node.MsgBuffer.ReqMsgs), len(node.MsgBuffer.PrePrepareMsgs), len(node.MsgBuffer.PrepareMsgs), len(node.MsgBuffer.CommitMsgs))
+		//fmt.Printf("                    Msgbuffer %d %d %d %d\n", len(node.MsgBuffer.ReqMsgs), len(node.MsgBuffer.PrePrepareMsgs), len(node.MsgBuffer.PrepareMsgs), len(node.MsgBuffer.CommitMsgs))
 	}
 
 	return nil

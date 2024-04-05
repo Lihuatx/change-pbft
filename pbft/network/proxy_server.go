@@ -6,12 +6,15 @@ import (
 	"fmt"
 	"net/http"
 	"simple_pbft/pbft/consensus"
+	"time"
 )
 
 type Server struct {
 	url  string
 	node *Node
 }
+
+var flag = false
 
 func NewServer(nodeID string) *Server {
 	node := NewNode(nodeID)
@@ -48,7 +51,10 @@ func (server *Server) getReq(writer http.ResponseWriter, request *http.Request) 
 	}
 	// 保存请求的URL到RequestMsg中
 	// 获取客户端地址
-
+	if !flag {
+		start = time.Now()
+		flag = true
+	}
 	server.node.MsgRequsetchan <- &msg
 	//server.node.MsgBufferLock.ReqMsgsLock.Lock()
 	//server.node.MsgBuffer.ReqMsgs = append(server.node.MsgBuffer.ReqMsgs, msg)
@@ -64,7 +70,7 @@ func (server *Server) getPrePrepare(writer http.ResponseWriter, request *http.Re
 		fmt.Println(err)
 		return
 	}
-	fmt.Printf("Got PrePrepare %d", msg.ViewID, msg.NodeID, msg.SequenceID)
+	//fmt.Printf("Got PrePrepare %d", msg.ViewID, msg.NodeID, msg.SequenceID)
 	server.node.MsgEntrance <- &msg
 	//server.node.MsgBufferLock.PrePrepareMsgsLock.Lock()
 	//server.node.MsgBuffer.PrePrepareMsgs = append(server.node.MsgBuffer.PrePrepareMsgs, msg)
