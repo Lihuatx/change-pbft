@@ -85,8 +85,8 @@ func NewNode(nodeID string) *Node {
 		},
 		MsgBufferLock: &MsgBufferLock{},
 		// Channels
-		MsgEntrance:    make(chan interface{}, 30),
-		MsgDelivery:    make(chan interface{}, 10),
+		MsgEntrance:    make(chan interface{}, 100),
+		MsgDelivery:    make(chan interface{}, 100),
 		MsgRequsetchan: make(chan interface{}, 100),
 		Alarm:          make(chan bool),
 	}
