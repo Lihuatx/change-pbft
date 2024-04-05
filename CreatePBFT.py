@@ -2,7 +2,7 @@ import subprocess
 import time
 import sys
 
-command_template = './app'
+command_template = './app.exe'
 groups = ['N']
 nodes_per_group = 26
 
