@@ -4,7 +4,7 @@ import sys
 
 command_template = './app.exe'
 groups = ['N']
-nodes_per_group = 26
+nodes_per_group = 28
 
 if len(sys.argv) < 2:
     print("Usage: python script.py <start_node_id>")
