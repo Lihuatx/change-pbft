@@ -1,5 +1,5 @@
 clusters = ['N']  # 集群的标识符
-nodes_per_cluster = 26  # 每个集群的节点数
+nodes_per_cluster = 28  # 每个集群的节点数
 base_port = 1110  # 基础端口号
 
 # 读取 network.txt 中的所有行作为 IP 地址列表
