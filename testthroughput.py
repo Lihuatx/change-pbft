@@ -1,22 +1,10 @@
 import subprocess
 import time
 
+node = 56
 # 定义要在新终端中执行的命令及其参数
-commands = [
-    ('app.exe', 'N0'),
-    ('app.exe', 'N1'),
-    ('app.exe', 'N2'),
-    ('app.exe', 'N3'),
-    ('app.exe', 'N4'),
-    ('app.exe', 'N5'),
-    ('app.exe', 'N6'),
-    ('app.exe', 'N7'),
-    ('app.exe', 'N8'),
-    ('app.exe', 'N9'),
-    ('app.exe', 'N10'),
-    ('app.exe', 'N11'),
-    ('app.exe', 'N12'),
-]
+# 使用列表推导式生成命令列表
+commands = [('app.exe', f'N{i}') for i in range(node)]
 
 # 遍历命令和参数，然后在新的命令提示符窗口中执行
 for exe, arg1 in commands:
