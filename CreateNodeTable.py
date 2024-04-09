@@ -8,11 +8,11 @@ server = sys.argv[3]
 base_port = 1110  # 基础端口号
 
 # 初始化 NodeTable
-node_table = {cluster: {f"{cluster}{i}": f"{client}:{base_port + i + (clusters.index(cluster) * nodes_per_cluster)}"
+node_table = {cluster: {f"{'N'}{i}": f"{client}:{base_port + i + (clusters.index(cluster) * nodes_per_cluster)}"
                         for i in range(nodes_per_cluster)}
               for cluster in clusters}
 
-node_table_MP = {cluster: {f"{cluster}{i}": f"{server}:{base_port + i + (clusters.index(cluster) * nodes_per_cluster)}"
+node_table_MP = {cluster: {f"{'N'}{i}": f"{server}:{base_port + i + (clusters.index(cluster) * nodes_per_cluster)}"
                            for i in range(nodes_per_cluster)}
                  for cluster in clusters}
 
