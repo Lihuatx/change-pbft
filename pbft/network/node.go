@@ -125,8 +125,8 @@ func LoadNodeTable(filePath string) map[string]string {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		parts := strings.Fields(scanner.Text())
-		if len(parts) == 3 {
-			_, nodeID, address := parts[0], parts[1], parts[2]
+		if len(parts) == 2 {
+			nodeID, address := parts[0], parts[1]
 			nodeTable[nodeID] = address
 		}
 	}
