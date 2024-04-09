@@ -18,10 +18,13 @@ start_node_id = int(sys.argv[1])
 commands = []
 with open('nodetable.txt', 'r') as file:
     for line in file:
-        node_id, ip_address = line.strip().split()
-        if ip_address == '0.0.0.0':
-            # 只有当 IP 地址为 0.0.0.0 时，才将节点加入命令列表
-            commands.append((command_template, node_id))
+        parts = line.strip().split()  # 分割行为节点 ID 和 IP地址:端口
+        if len(parts) == 2:
+            node_id, ip_port = parts
+            ip_address, _ = ip_port.split(':')  # 分割 IP地址:端口 为 IP 地址和端口号
+            if ip_address == '0.0.0.0':
+                # 当 IP 地址为 0.0.0.0 时，将节点加入命令列表
+                commands.append((command_template, node_id))
 
 def run_commands():
     print("Starting commands...")
