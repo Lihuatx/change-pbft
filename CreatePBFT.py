@@ -14,8 +14,14 @@ if len(sys.argv) < 2:
 # 从命令行读取 start_node_id 的值
 start_node_id = int(sys.argv[1])
 
-# 生成命令列表，从 ('app.exe', 'N<start_node_id>') 开始
-commands = [(command_template, f'{group}{i}') for group in groups for i in range(start_node_id, start_node_id + nodes_per_group)]
+# 从 nodetable.txt 读取节点信息
+commands = []
+with open('nodetable.txt', 'r') as file:
+    for line in file:
+        node_id, ip_address = line.strip().split()
+        if ip_address == '0.0.0.0':
+            # 只有当 IP 地址为 0.0.0.0 时，才将节点加入命令列表
+            commands.append((command_template, node_id))
 
 def run_commands():
     print("Starting commands...")
