@@ -26,4 +26,4 @@ for i in range(nodes_per_cluster):
 # 将 NodeTable 保存到 nodetable.txt 文件中
 with open('nodetable.txt', 'w') as file:
     for node_id, address in node_table.items():
-        file.write(f"({node_id},{address})\n")
+        file.write(f"{node_id},{address}\n")
