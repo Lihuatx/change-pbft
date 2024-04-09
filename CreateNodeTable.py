@@ -4,6 +4,8 @@ arg = sys.argv[1]
 nodes_per_cluster = int(arg)  # 节点总数
 client = sys.argv[2]
 server = sys.argv[3]
+z = int(sys.argv[4])
+nodes_per_cluster = z * nodes_per_cluster
 base_port = 1110  # 基础端口号
 
 # 计算前三分之一节点的数量（向上取整）
