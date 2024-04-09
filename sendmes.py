@@ -9,7 +9,7 @@ for i in range(1):
     ps_command = f"""
         $headers = @{{ "Content-Type" = "application/json" }}
         $body = '{{"clientID":"ahnhwi","operation":"SendMes1 - {i}","timestamp":{i}}}'
-        $response = Invoke-WebRequest -Uri "114.55.130.178:1110/req" -Method POST -Headers $headers -Body $body
+        $response = Invoke-WebRequest -Uri "47.107.59.211:1110/req" -Method POST -Headers $headers -Body $body
         """
     subprocess.Popen(['powershell', '-Command', ps_command])
     time.sleep(0.05)

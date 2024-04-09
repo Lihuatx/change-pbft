@@ -165,6 +165,7 @@ func (node *Node) Broadcast(msg interface{}, path string) map[string]error {
 }
 
 var start time.Time
+var duration time.Duration
 
 func (node *Node) Reply(msg *consensus.ReplyMsg) error {
 	// Print all committed messages.
@@ -176,10 +177,10 @@ func (node *Node) Reply(msg *consensus.ReplyMsg) error {
 	node.View.ID++
 	fmt.Printf("View ID: %d\n", node.View.ID)
 
-	if node.View.ID == 10000000001 && node.NodeID == node.View.Primary {
-
-	} else if node.View.ID == 10000000050 && node.NodeID == node.View.Primary {
-		duration := time.Since(start)
+	if node.View.ID == viewID+100 && node.NodeID == node.View.Primary {
+		start = time.Now()
+	} else if node.View.ID == viewID+200 && node.NodeID == node.View.Primary {
+		duration = time.Since(start)
 		// 打开文件，如果文件不存在则创建，如果文件存在则追加内容
 		fmt.Printf("Function took %s\n", duration)
 		file, err := os.OpenFile("example.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
@@ -194,6 +195,8 @@ func (node *Node) Reply(msg *consensus.ReplyMsg) error {
 			log.Fatal(err)
 		}
 
+	} else if node.View.ID > viewID+200 && node.NodeID == node.View.Primary {
+		fmt.Printf("  Function took %s\n", duration)
 	}
 
 	jsonMsg, err := json.Marshal(msg)

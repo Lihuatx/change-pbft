@@ -5,6 +5,7 @@ import sys
 command_template = './app.exe'
 groups = ['N']
 nodes_per_group = int(sys.argv[2])
+z = int(sys.argv[3])
 
 if len(sys.argv) < 2:
     print("Usage: python script.py <start_node_id>")
@@ -34,10 +35,10 @@ def run_commands():
         subprocess.run(['tmux', 'new-window', '-t', f'myPBFT:{index + 1}', '-n', window_name])
         time.sleep(0.1)
 
-        tmux_command = f"tmux send-keys -t myPBFT:{index + 1} '{exe} {arg1}' C-m"
+        tmux_command = f"tmux send-keys -t myPBFT:{index + 1} '{exe} {arg1} {nodes_per_group} {z}' C-m"
         subprocess.run(['bash', '-c', tmux_command])
 
-    time.sleep(2)
+    time.sleep(1)
 
 if __name__ == "__main__":
     run_commands()
