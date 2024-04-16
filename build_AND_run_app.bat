@@ -11,5 +11,30 @@ go build -o app.exe
 REM 等待编译完成
 timeout /t 1 >nul
 
-REM 执行 python 命令
-python testthroughput.py
+
+REM 第一个参数赋值给 n
+set n=%1
+
+REM 第二个参数赋值给 z
+
+set z=%2
+
+REM 第三个参数赋值给 client
+set client=%3
+
+REM 第四个参数赋值给 server
+set server=%4
+
+REM 第五个参数赋值给 Cluster
+set Cluster=%5
+
+REM 第六个参数赋值给 startNode
+set startNode=%6
+
+REM 调用 Python 脚本，传递变量值
+python CreateNodeTable.py %n% %client% %server% %z%
+
+REM 调用另一个 Python 脚本，传递 Cluster 和 startNode 变量的值
+python CreateWindows.py %startNode% %n% %z%
+
+pause

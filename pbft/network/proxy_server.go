@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"simple_pbft/pbft/consensus"
+	"time"
 )
 
 type Server struct {
@@ -51,13 +52,10 @@ func (server *Server) getReq(writer http.ResponseWriter, request *http.Request) 
 	// 保存请求的URL到RequestMsg中
 	// 获取客户端地址
 	if !flag {
-		//start = time.Now()
+		start = time.Now()
 		flag = true
 	}
 	server.node.MsgRequsetchan <- &msg
-	//server.node.MsgBufferLock.ReqMsgsLock.Lock()
-	//server.node.MsgBuffer.ReqMsgs = append(server.node.MsgBuffer.ReqMsgs, msg)
-	//server.node.MsgBufferLock.ReqMsgsLock.Unlock()
 
 }
 

@@ -5,3 +5,12 @@ durtion: 12.3617425s
 durtion: 7.2726951s
 durtion: 27.2955401s
 durtion: 3.88943s
+durtion: 1.9928253s
+durtion: 2.1630232s
+durtion: 50.7236075s
+durtion: 34.9016ms
+durtion: 5.191218s
+durtion: 53.4545ms
+durtion: 93.8578ms
+durtion: 61.8525ms
+durtion: 70.1043ms

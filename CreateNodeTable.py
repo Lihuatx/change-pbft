@@ -1,29 +1,25 @@
 import sys
 
-arg = sys.argv[1]
-nodes_per_cluster = int(arg)  # 节点总数
-client = sys.argv[2]
-server = sys.argv[3]
-z = int(sys.argv[4])
-nodes_per_cluster = z * nodes_per_cluster
+# 从命令行参数读取配置
+nodes_per_cluster = int(sys.argv[1])
+server1 = sys.argv[2]
+server2 = sys.argv[3]
+server3 = sys.argv[4]
+
 base_port = 1110  # 基础端口号
 
-# 计算前三分之一节点的数量（向上取整）
-first_third = (nodes_per_cluster + 2) // 3  # 使用整数除法并向上取整
+# 为了方便追踪每个服务器的端口号分配，我们使用一个变量来记录下一个可用的端口号
+next_port = base_port
 
-# 初始化 NodeTable
-node_table = {}
-for i in range(nodes_per_cluster):
-    node_id = f"N{i}"
-    if i < first_third:
-        # 前三分之一的节点使用 client IP 地址
-        address = f"{client}:{base_port + i}"
-    else:
-        # 后三分之二的节点使用 server IP 地址
-        address = f"{server}:{base_port + i}"
-    node_table[node_id] = address
-
-# 将 NodeTable 保存到 nodetable.txt 文件中
+# 打开文件以写入节点信息
 with open('nodetable.txt', 'w') as file:
-    for node_id, address in node_table.items():
-        file.write(f"{node_id} {address}\n")
+    # 处理每个服务器
+    for index, server in enumerate([server1, server2, server3]):
+        # 对每个服务器生成指定数量的节点
+        for i in range(nodes_per_cluster):
+            node_id = index * nodes_per_cluster + i  # 计算节点ID，确保不重复
+            # 写入节点信息到文件
+            file.write(f"N{node_id} {server}:{next_port}\n")
+            next_port += 1  # 更新端口号为下一个
+
+#print("Node table has been created successfully.")

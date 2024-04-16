@@ -43,6 +43,7 @@ type Node struct {
 
 type MsgBuffer struct {
 	ReqMsgs        []*consensus.RequestMsg
+	BatchReqMsgs   []*consensus.BatchRequestMsg
 	PrePrepareMsgs []*consensus.PrePrepareMsg
 	PrepareMsgs    []*consensus.VoteMsg
 	CommitMsgs     []*consensus.VoteMsg
@@ -79,6 +80,7 @@ func NewNode(nodeID string) *Node {
 		CommittedMsgs: make([]*consensus.RequestMsg, 0),
 		MsgBuffer: &MsgBuffer{
 			ReqMsgs:        make([]*consensus.RequestMsg, 0),
+			BatchReqMsgs:   make([]*consensus.BatchRequestMsg, 0),
 			PrePrepareMsgs: make([]*consensus.PrePrepareMsg, 0),
 			PrepareMsgs:    make([]*consensus.VoteMsg, 0),
 			CommitMsgs:     make([]*consensus.VoteMsg, 0),
@@ -177,9 +179,9 @@ func (node *Node) Reply(msg *consensus.ReplyMsg) error {
 	node.View.ID++
 	fmt.Printf("View ID: %d\n", node.View.ID)
 
-	if node.View.ID == viewID+100 && node.NodeID == node.View.Primary {
-		start = time.Now()
-	} else if node.View.ID == viewID+200 && node.NodeID == node.View.Primary {
+	if len(node.CommittedMsgs) == 1 && node.NodeID == node.View.Primary {
+		//start = time.Now()
+	} else if len(node.CommittedMsgs) == 3000 && node.NodeID == node.View.Primary {
 		duration = time.Since(start)
 		// 打开文件，如果文件不存在则创建，如果文件存在则追加内容
 		fmt.Printf("Function took %s\n", duration)
@@ -195,25 +197,24 @@ func (node *Node) Reply(msg *consensus.ReplyMsg) error {
 			log.Fatal(err)
 		}
 
-	} else if node.View.ID > viewID+200 && node.NodeID == node.View.Primary {
+	} else if len(node.CommittedMsgs) > 3000 && node.NodeID == node.View.Primary {
 		fmt.Printf("  Function took %s\n", duration)
 	}
 
-	jsonMsg, err := json.Marshal(msg)
-	if err != nil {
-		return err
-	}
-
-	// Client가 없으므로, 일단 Primary에게 보내는 걸로 처리.
-	send(node.NodeTable[node.View.Primary]+"/reply", jsonMsg)
-	send("127.0.0.1:5000/reply", jsonMsg)
+	//jsonMsg, err := json.Marshal(msg)
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//// Client가 없으므로, 일단 Primary에게 보내는 걸로 처리.
+	//send(node.NodeTable[node.View.Primary]+"/reply", jsonMsg)
 
 	return nil
 }
 
 // GetReq can be called when the node's CurrentState is nil.
 // Consensus start procedure for the Primary.
-func (node *Node) GetReq(reqMsg *consensus.RequestMsg, goOn bool) error {
+func (node *Node) GetReq(reqMsg *consensus.BatchRequestMsg, goOn bool) error {
 	LogMsg(reqMsg)
 
 	// Create a new state for the new consensus.
@@ -336,7 +337,9 @@ func (node *Node) GetCommit(commitMsg *consensus.VoteMsg) error {
 		replyMsg.NodeID = node.NodeID
 
 		// Save the last version of committed messages to node.
-		node.CommittedMsgs = append(node.CommittedMsgs, committedMsg)
+		for i := 0; i < consensus.BatchSize; i++ {
+			node.CommittedMsgs = append(node.CommittedMsgs, committedMsg.Requests[i])
+		}
 
 		LogStage("Commit", true)
 		node.Reply(replyMsg)
@@ -401,7 +404,6 @@ func (node *Node) dispatchMsg() {
 func (node *Node) SaveClientRequest(msg interface{}) {
 	switch msg.(type) {
 	case *consensus.RequestMsg:
-
 		//一开始没有进行共识的时候，此时 currentstate 为nil
 		node.MsgBufferLock.ReqMsgsLock.Lock()
 		node.MsgBuffer.ReqMsgs = append(node.MsgBuffer.ReqMsgs, msg.(*consensus.RequestMsg))
@@ -422,12 +424,6 @@ func (node *Node) resolveClientRequest() {
 
 func (node *Node) routeMsg(msg interface{}) []error {
 	switch msg.(type) {
-	//case *consensus.RequestMsg:
-	//	//一开始没有进行共识的时候，此时 currentstate 为nil
-	//	node.MsgBufferLock.ReqMsgsLock.Lock()
-	//	node.MsgBuffer.ReqMsgs = append(node.MsgBuffer.ReqMsgs, msg.(*consensus.RequestMsg))
-	//	node.MsgBufferLock.ReqMsgsLock.Unlock()
-	//	fmt.Printf("                    Msgbuffer %d %d %d %d\n", len(node.MsgBuffer.ReqMsgs), len(node.MsgBuffer.PrePrepareMsgs), len(node.MsgBuffer.PrepareMsgs), len(node.MsgBuffer.CommitMsgs))
 
 	case *consensus.PrePrepareMsg:
 
@@ -528,8 +524,8 @@ func (mb *MsgBuffer) DequeueReqMsg() *consensus.RequestMsg {
 	if len(mb.ReqMsgs) == 0 {
 		return nil
 	}
-	msg := mb.ReqMsgs[0]        // 获取第一个元素
-	mb.ReqMsgs = mb.ReqMsgs[1:] // 移除第一个元素
+	msg := mb.ReqMsgs[0]                          // 获取第一个元素
+	mb.ReqMsgs = mb.ReqMsgs[consensus.BatchSize:] // 移除第一个元素
 	return msg
 }
 
@@ -567,9 +563,21 @@ func (node *Node) resolveMsg() {
 	for {
 		// Get buffered messages from the dispatcher.
 		switch {
-		case len(node.MsgBuffer.ReqMsgs) > 0 && (node.CurrentState.LastSequenceID == -2 || node.CurrentState.CurrentStage == consensus.Committed):
+		case len(node.MsgBuffer.ReqMsgs) >= consensus.BatchSize && (node.CurrentState.LastSequenceID == -2 || node.CurrentState.CurrentStage == consensus.Committed):
 			node.MsgBufferLock.ReqMsgsLock.Lock()
-			errs := node.resolveRequestMsg(node.MsgBuffer.ReqMsgs[0])
+			// 初始化batch并确保它是非nil
+			var batch consensus.BatchRequestMsg
+			const viewID = 10000000000
+			// 逐个赋值到数组中
+			for j := 0; j < consensus.BatchSize; j++ {
+				batch.Requests[j] = node.MsgBuffer.ReqMsgs[j]
+			}
+			batch.Timestamp = node.MsgBuffer.ReqMsgs[0].Timestamp
+			batch.ClientID = node.MsgBuffer.ReqMsgs[0].ClientID
+			// 添加新的批次到批次消息缓存
+			node.MsgBuffer.BatchReqMsgs = append(node.MsgBuffer.BatchReqMsgs, &batch)
+
+			errs := node.resolveRequestMsg(node.MsgBuffer.BatchReqMsgs[node.View.ID-viewID])
 			if errs != nil {
 				fmt.Println(errs)
 				// TODO: send err to ErrorChannel
@@ -681,7 +689,7 @@ func (node *Node) alarmToDispatcher() {
 	}
 }
 
-func (node *Node) resolveRequestMsg(msg *consensus.RequestMsg) error {
+func (node *Node) resolveRequestMsg(msg *consensus.BatchRequestMsg) error {
 
 	err := node.GetReq(msg, false)
 	if err != nil {

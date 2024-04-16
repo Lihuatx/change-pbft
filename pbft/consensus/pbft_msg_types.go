@@ -7,6 +7,12 @@ type RequestMsg struct {
 	SequenceID int64  `json:"sequenceID"`
 }
 
+type BatchRequestMsg struct {
+	Requests  [BatchSize]*RequestMsg `json:"Requests"`
+	Timestamp int64                  `json:"timestamp"`
+	ClientID  string                 `json:"clientID"`
+}
+
 type ReplyMsg struct {
 	ViewID    int64  `json:"viewID"`
 	Timestamp int64  `json:"timestamp"`
@@ -16,12 +22,12 @@ type ReplyMsg struct {
 }
 
 type PrePrepareMsg struct {
-	ViewID     int64       `json:"viewID"`
-	SequenceID int64       `json:"sequenceID"`
-	Digest     string      `json:"digest"`
-	NodeID     string      `json:"nodeID"` //添加nodeID
-	RequestMsg *RequestMsg `json:"requestMsg"`
-	Sign       []byte      //添加sign
+	ViewID     int64            `json:"viewID"`
+	SequenceID int64            `json:"sequenceID"`
+	Digest     string           `json:"digest"`
+	NodeID     string           `json:"nodeID"` //添加nodeID
+	RequestMsg *BatchRequestMsg `json:"requestMsg"`
+	Sign       []byte           //添加sign
 }
 
 type VoteMsg struct {
@@ -34,6 +40,8 @@ type VoteMsg struct {
 }
 
 type MsgType int
+
+const BatchSize = 100
 
 const (
 	PrepareMsg MsgType = iota
