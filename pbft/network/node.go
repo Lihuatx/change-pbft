@@ -87,9 +87,9 @@ func NewNode(nodeID string) *Node {
 		},
 		MsgBufferLock: &MsgBufferLock{},
 		// Channels
-		MsgEntrance:    make(chan interface{}, 100),
-		MsgDelivery:    make(chan interface{}, 100),
-		MsgRequsetchan: make(chan interface{}, 100),
+		MsgEntrance:    make(chan interface{}, 200),
+		MsgDelivery:    make(chan interface{}, 200),
+		MsgRequsetchan: make(chan interface{}, 200),
 		Alarm:          make(chan bool),
 	}
 
@@ -181,7 +181,7 @@ func (node *Node) Reply(msg *consensus.ReplyMsg) error {
 
 	if len(node.CommittedMsgs) == 1 && node.NodeID == node.View.Primary {
 		//start = time.Now()
-	} else if len(node.CommittedMsgs) == 3000 && node.NodeID == node.View.Primary {
+	} else if len(node.CommittedMsgs) == 300 && node.NodeID == node.View.Primary {
 		duration = time.Since(start)
 		// 打开文件，如果文件不存在则创建，如果文件存在则追加内容
 		fmt.Printf("Function took %s\n", duration)
@@ -197,7 +197,7 @@ func (node *Node) Reply(msg *consensus.ReplyMsg) error {
 			log.Fatal(err)
 		}
 
-	} else if len(node.CommittedMsgs) > 3000 && node.NodeID == node.View.Primary {
+	} else if len(node.CommittedMsgs) > 300 && node.NodeID == node.View.Primary {
 		fmt.Printf("  Function took %s\n", duration)
 	}
 
