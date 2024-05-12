@@ -8,7 +8,7 @@ server3 = sys.argv[4]
 server4 = sys.argv[5]
 server5 = sys.argv[6]
 
-base_port = 1110  # 基础端口号
+base_port = 2222  # 基础端口号
 
 # 为了方便追踪每个服务器的端口号分配，我们使用一个变量来记录下一个可用的端口号
 next_port = base_port

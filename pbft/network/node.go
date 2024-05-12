@@ -199,6 +199,7 @@ func (node *Node) Reply(msg *consensus.ReplyMsg) error {
 	} else if len(node.CommittedMsgs) > 300 && node.NodeID == node.View.Primary {
 		fmt.Printf("  Function took %s\n", duration)
 	}
+
 	if node.NodeID == node.View.Primary {
 		go func() {
 			for i := consensus.BatchSize; i > 0; i-- {
@@ -210,6 +211,26 @@ func (node *Node) Reply(msg *consensus.ReplyMsg) error {
 				fmt.Printf("\n\nReply to Client!\n\n\n")
 			}
 		}()
+	} else {
+		for i := consensus.BatchSize; i > 0; i-- {
+			replyClientMsg := node.CommittedMsgs[len(node.CommittedMsgs)-i]
+			cmd := "msg: Client-" + "N" + "499"
+			if replyClientMsg.Operation == cmd {
+				fmt.Println("save Time!!!")
+				// 创建文件并写入 duration
+				file, err := os.Create("costTime.txt")
+				if err != nil {
+					log.Fatal("Cannot create file", err)
+				}
+				defer file.Close()
+
+				// 写入持续时间到文件
+				_, err = file.WriteString("saveTime")
+				if err != nil {
+					log.Fatal("Cannot write to file", err)
+				}
+			}
+		}
 	}
 
 	return nil
