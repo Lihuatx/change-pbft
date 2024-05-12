@@ -1,17 +1,16 @@
 import subprocess
-import time
-import datetime
 import sys
 
 arg = sys.argv[1]
 
-if arg == "N":
+if arg == "0":
 
-    cnt = 0
-    for i in range(300):
-        cnt += 1
-        curl_command = f"""
-            curl -X POST "http://127.0.0.1:1110/req" -H "Content-Type: application/json" -d '{{"clientID":"ahnhwi-{i}","operation":"SendMes1 - {i}","timestamp":{i}}}'
-            """
+    subprocess.run(['tmux', 'kill-session', '-t', 'myClient'])
+    subprocess.run(['tmux', 'new-session', '-d', '-s', 'myClient'])
 
-        subprocess.Popen(['bash', '-c', curl_command])
+    command = f"./app client N"
+    subprocess.run(['tmux', 'new-window', '-t', f'myClient:{1}', '-n', "Client-1"])
+
+    tmux_command = f"tmux send-keys -t myClient:{1} './app client N' C-m"
+
+    subprocess.Popen(['bash', '-c', tmux_command])
