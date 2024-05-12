@@ -167,6 +167,7 @@ func (node *Node) Broadcast(msg interface{}, path string) map[string]error {
 
 var start time.Time
 var duration time.Duration
+var StartNodeID string
 
 func (node *Node) Reply(msg *consensus.ReplyMsg) error {
 	// Print all committed messages.
@@ -211,7 +212,7 @@ func (node *Node) Reply(msg *consensus.ReplyMsg) error {
 				fmt.Printf("\n\nReply to Client!\n\n\n")
 			}
 		}()
-	} else {
+	} else if node.NodeID == StartNodeID {
 		for i := consensus.BatchSize; i > 0; i-- {
 			replyClientMsg := node.CommittedMsgs[len(node.CommittedMsgs)-i]
 			cmd := "msg: Client-" + "N" + "499"

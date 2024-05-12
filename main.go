@@ -21,6 +21,7 @@ func main() {
 	} else {
 		nodeNumStr := os.Args[2]
 		nodeZStr := os.Args[3]
+		network.StartNodeID = os.Args[4]
 		nodeNumN, _ := strconv.Atoi(nodeNumStr)
 		nodeNumZ, _ := strconv.Atoi(nodeZStr)
 		consensus.F = nodeNumN * nodeNumZ / 3
