@@ -11,7 +11,7 @@ import (
 func main() {
 	genRsaKeys()
 	nodeID := os.Args[1]
-	sendMsgNumber := 200
+	sendMsgNumber := 100
 	if nodeID == "client" {
 		client := network.ClientStart("N")
 
