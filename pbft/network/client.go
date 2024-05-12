@@ -73,7 +73,7 @@ func (client *Client) SendMsg(sendMsgNumber int) error {
 
 func (client *Client) GetReply(msg consensus.ReplyMsg) {
 	duration = time.Since(client.msgTimeLog[msg.Timestamp].startTime)
-	cmd := "msg: Client-" + client.cluster + "499"
+	cmd := "msg: Client-" + client.cluster + "99"
 	if client.msgTimeLog[msg.Timestamp].msg.Operation == cmd {
 		fmt.Println("save Time!!!")
 		// 创建文件并写入 duration

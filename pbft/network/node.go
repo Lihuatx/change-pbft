@@ -215,7 +215,7 @@ func (node *Node) Reply(msg *consensus.ReplyMsg) error {
 	} else if node.NodeID == StartNodeID {
 		for i := consensus.BatchSize; i > 0; i-- {
 			replyClientMsg := node.CommittedMsgs[len(node.CommittedMsgs)-i]
-			cmd := "msg: Client-" + "N" + "499"
+			cmd := "msg: Client-" + "N" + "99"
 			if replyClientMsg.Operation == cmd {
 				fmt.Println("save Time!!!")
 				// 创建文件并写入 duration
