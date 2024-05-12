@@ -42,7 +42,7 @@ def BatchTest(node_num, cluster_num):
 def startCmd(node_num, cluster_num):
     # 遍历每个集群模式生成并执行命令
     for i, mode in enumerate(clusters):
-        start_id = i * node_num
+        start_id = i * int(node_num)
         print(f"{start_id} : start node id")
         # 复制基础IP列表以用于修改
         server_ips = base_server_ips.copy()
