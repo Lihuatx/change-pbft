@@ -48,7 +48,7 @@ def startCmd(node_num, cluster_num):
         # 当前模式对应的服务器IP设置为"0.0.0.0"
         server_ips[i] = "0.0.0.0"
         # 生成命令字符串
-        cmd = cmd_head + node_num + cluster_num + ' '.join(server_ips) + ' ' + 'N ' + str(start_id)
+        cmd = cmd_head + node_num + cluster_num + ' '.join(server_ips) + ' ' + 'N ' + 'N' + str(start_id)
         # 打印生成的命令
         if exeCluster == clusters[i]:
             print("Executing command:", cmd)
