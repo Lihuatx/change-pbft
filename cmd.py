@@ -7,7 +7,7 @@ import saveData
 
 exeCluster = sys.argv[1]
 cluster_num = sys.argv[3] + " "
-start_id = sys.argv[4]
+
 node_numList = ["16 ", "22 ", "28 ", "34 ", "40 ", "46 "]
 PrimaryClusterWaitTime = 5
 
@@ -42,6 +42,7 @@ def BatchTest(node_num, cluster_num):
 def startCmd(node_num, cluster_num):
     # 遍历每个集群模式生成并执行命令
     for i, mode in enumerate(clusters):
+        start_id = i * node_num
         # 复制基础IP列表以用于修改
         server_ips = base_server_ips.copy()
         # 当前模式对应的服务器IP设置为"0.0.0.0"
