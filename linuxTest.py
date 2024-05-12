@@ -3,7 +3,7 @@ import sys
 
 arg = sys.argv[1]
 
-if arg == "0":
+if arg == "N0":
 
     subprocess.run(['tmux', 'kill-session', '-t', 'myClient'])
     subprocess.run(['tmux', 'new-session', '-d', '-s', 'myClient'])
