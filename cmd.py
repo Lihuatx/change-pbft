@@ -7,6 +7,7 @@ import saveData
 
 exeCluster = sys.argv[1]
 cluster_num = sys.argv[3] + " "
+start_id = sys.argv[4]
 node_numList = ["16 ", "22 ", "28 ", "34 ", "40 ", "46 "]
 PrimaryClusterWaitTime = 5
 
@@ -46,7 +47,7 @@ def startCmd(node_num, cluster_num):
         # 当前模式对应的服务器IP设置为"0.0.0.0"
         server_ips[i] = "0.0.0.0"
         # 生成命令字符串
-        cmd = cmd_head + node_num + cluster_num + ' '.join(server_ips) + ' ' + 'N'
+        cmd = cmd_head + node_num + cluster_num + ' '.join(server_ips) + ' ' + 'N' + start_id
         # 打印生成的命令
         if exeCluster == clusters[i]:
             print("Executing command:", cmd)
