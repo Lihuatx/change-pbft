@@ -11,12 +11,22 @@ import (
 func main() {
 	genRsaKeys()
 	nodeID := os.Args[1]
-	nodeNumStr := os.Args[2]
-	nodeZStr := os.Args[3]
-	nodeNumN, _ := strconv.Atoi(nodeNumStr)
-	nodeNumZ, _ := strconv.Atoi(nodeZStr)
-	consensus.F = nodeNumN * nodeNumZ / 3
-	server := network.NewServer(nodeID)
+	sendMsgNumber := 500
+	if nodeID == "client" {
+		client := network.ClientStart("N")
 
-	server.Start()
+		go client.SendMsg(sendMsgNumber)
+
+		client.Start()
+	} else {
+		nodeNumStr := os.Args[2]
+		nodeZStr := os.Args[3]
+		nodeNumN, _ := strconv.Atoi(nodeNumStr)
+		nodeNumZ, _ := strconv.Atoi(nodeZStr)
+		consensus.F = nodeNumN * nodeNumZ / 3
+		server := network.NewServer(nodeID)
+
+		server.Start()
+	}
+
 }

@@ -38,3 +38,5 @@ def run_commands():
 
 if __name__ == "__main__":
     run_commands()
+    cmd_command = f'start cmd /c {command_template} "client"'
+    subprocess.run(cmd_command, shell=True)

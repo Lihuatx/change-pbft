@@ -65,7 +65,6 @@ const ResolvingTimeDuration = time.Millisecond * 1000 // 1 second.
 
 func NewNode(nodeID string) *Node {
 	const viewID = 10000000000 // temporary.
-
 	node := &Node{
 		// Hard-coded for test.
 		NodeID: nodeID,
@@ -200,14 +199,18 @@ func (node *Node) Reply(msg *consensus.ReplyMsg) error {
 	} else if len(node.CommittedMsgs) > 300 && node.NodeID == node.View.Primary {
 		fmt.Printf("  Function took %s\n", duration)
 	}
-
-	//jsonMsg, err := json.Marshal(msg)
-	//if err != nil {
-	//	return err
-	//}
-	//
-	//// Client가 없으므로, 일단 Primary에게 보내는 걸로 처리.
-	//send(node.NodeTable[node.View.Primary]+"/reply", jsonMsg)
+	if node.NodeID == node.View.Primary {
+		go func() {
+			for i := consensus.BatchSize; i > 0; i-- {
+				replyClientMsg := node.CommittedMsgs[len(node.CommittedMsgs)-i]
+				jsonMsg, _ := json.Marshal(replyClientMsg)
+				// 系统中没有设置用户，reply消息直接发送给主节点
+				url := ClientURL["N"] + "/reply"
+				send(url, jsonMsg)
+				fmt.Printf("\n\nReply to Client!\n\n\n")
+			}
+		}()
+	}
 
 	return nil
 }
@@ -382,6 +385,8 @@ func (node *Node) createStateForNewConsensus(goOn bool) error {
 
 func (node *Node) dispatchMsg() {
 	for {
+		time.Sleep(10 * time.Microsecond)
+
 		select {
 		case msg := <-node.MsgEntrance:
 			//fmt.Printf("Send node.MsgEntrance  ")
@@ -414,6 +419,8 @@ func (node *Node) SaveClientRequest(msg interface{}) {
 
 func (node *Node) resolveClientRequest() {
 	for {
+		time.Sleep(10 * time.Microsecond)
+
 		select {
 		case msg := <-node.MsgRequsetchan:
 			node.SaveClientRequest(msg)
@@ -561,6 +568,8 @@ func (mb *MsgBuffer) DequeueCommitMsg() *consensus.VoteMsg {
 
 func (node *Node) resolveMsg() {
 	for {
+		time.Sleep(10 * time.Microsecond)
+
 		// Get buffered messages from the dispatcher.
 		switch {
 		case len(node.MsgBuffer.ReqMsgs) >= consensus.BatchSize && (node.CurrentState.LastSequenceID == -2 || node.CurrentState.CurrentStage == consensus.Committed):
