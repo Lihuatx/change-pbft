@@ -149,20 +149,20 @@ func LoadNodeTable(filePath string) map[string]string {
 
 func (node *Node) Broadcast(msg interface{}, path string) map[string]error {
 	errorMap := make(map[string]error)
-
+	i := 0
 	for nodeID, url := range node.NodeTable {
 		if nodeID == node.NodeID {
 			continue
 		}
-
+		i++
 		jsonMsg, err := json.Marshal(msg)
 		if err != nil {
 			errorMap[nodeID] = err
 			continue
 		}
-
-		//fmt.Printf("Broadcasting to %s, message size: %d bytes\n", nodeID, len(jsonMsg))
-
+		if i%10 == 0 {
+			fmt.Printf("Broadcasting to %s, message size: %d bytes\n", nodeID, len(jsonMsg))
+		}
 		send(url+path, jsonMsg)
 	}
 
