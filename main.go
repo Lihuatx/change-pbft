@@ -25,6 +25,7 @@ func main() {
 		network.StartNodeID = os.Args[4]
 		nodeNumN, _ := strconv.Atoi(nodeNumStr)
 		nodeNumZ, _ := strconv.Atoi(nodeZStr)
+		network.EndNodeNum = nodeNumN * nodeNumZ
 		consensus.F = nodeNumN * nodeNumZ / 3
 		server := network.NewServer(nodeID)
 

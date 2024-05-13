@@ -113,6 +113,8 @@ func NewNode(nodeID string) *Node {
 	return node
 }
 
+var EndNodeNum = 0
+
 // LoadNodeTable 从指定的文件路径加载 NodeTable
 func LoadNodeTable(filePath string) map[string]string {
 	file, err := os.Open(filePath)
@@ -129,6 +131,11 @@ func LoadNodeTable(filePath string) map[string]string {
 		parts := strings.Fields(scanner.Text())
 		if len(parts) == 2 {
 			nodeID, address := parts[0], parts[1]
+			number := strings.TrimPrefix(nodeID, "N")
+			id, _ := strconv.Atoi(number)
+			if id > EndNodeNum {
+				break
+			}
 			nodeTable[nodeID] = address
 		}
 	}
