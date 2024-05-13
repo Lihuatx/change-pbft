@@ -16,6 +16,7 @@ import (
 	"log"
 	"os"
 	"simple_pbft/pbft/consensus"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -168,6 +169,7 @@ func (node *Node) Broadcast(msg interface{}, path string) map[string]error {
 var start time.Time
 var duration time.Duration
 var StartNodeID string
+var SendMsgNumber = 0
 
 func (node *Node) Reply(msg *consensus.ReplyMsg) error {
 	// Print all committed messages.
@@ -215,7 +217,7 @@ func (node *Node) Reply(msg *consensus.ReplyMsg) error {
 	} else if node.NodeID == StartNodeID {
 		for i := consensus.BatchSize; i > 0; i-- {
 			replyClientMsg := node.CommittedMsgs[len(node.CommittedMsgs)-i]
-			cmd := "msg: Client-" + "N" + "99"
+			cmd := "msg: Client-" + "N" + strconv.Itoa(SendMsgNumber)
 			if replyClientMsg.Operation == cmd {
 				fmt.Println("save Time!!!")
 				// 创建文件并写入 duration
