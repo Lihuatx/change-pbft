@@ -41,7 +41,7 @@ type VoteMsg struct {
 
 type MsgType int
 
-const BatchSize = 100
+const BatchSize = 50
 
 const (
 	PrepareMsg MsgType = iota
