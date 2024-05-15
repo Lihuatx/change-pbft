@@ -164,6 +164,7 @@ func (node *Node) Broadcast(msg interface{}, path string) map[string]error {
 			fmt.Printf("Broadcasting to %s, message size: %d bytes\n", nodeID, len(jsonMsg))
 		}
 		send(url+path, jsonMsg)
+		time.Sleep(2 * time.Millisecond)
 	}
 
 	if len(errorMap) == 0 {
