@@ -16,7 +16,7 @@ PrimaryClusterWaitTime = 5
 # 定义集群中的不同模式以及服务器IP（可以按实际情况填入具体IP地址）
 clusters = ['N', 'M', 'P', 'J', 'K']
 cmd_head = "./test.sh "
-base_server_ips = ["43.129.220.90", "43.155.176.149", "43.163.234.202", "43.134.41.237", "43.128.207.195"]
+base_server_ips = ["43.132.126.36", "43.131.248.12", "43.128.253.129", "150.109.6.41", "43.133.117.50"]
 
 def BatchTest(node_num, cluster_num):
     testCnt = 0
@@ -28,7 +28,7 @@ def BatchTest(node_num, cluster_num):
     else:
         with open(xls_file, 'a') as xls:
             xls.write(f"Duration time(N = {node_num} Z = {cluster_num})\n")
-    while testCnt < 10:
+    while testCnt < 5:
         print(f"\n--- Test count {testCnt + 1}")
 
         cmd_thread = threading.Thread(target=startCmd, args=(node_num, cluster_num))
