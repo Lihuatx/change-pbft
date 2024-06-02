@@ -25,6 +25,7 @@ import (
 type Node struct {
 	NodeID         string
 	NodeTable      map[string]string // key=nodeID, value=url
+	NodeType       MaliciousNode
 	View           *View
 	CurrentState   *consensus.State
 	CommittedMsgs  []*consensus.RequestMsg // kinda block.
@@ -41,6 +42,13 @@ type Node struct {
 	//RSA公钥
 	rsaPubKey []byte
 }
+
+type MaliciousNode int
+
+const (
+	NonMaliciousNode MaliciousNode = iota
+	isMaliciousNode
+)
 
 type MsgBuffer struct {
 	ReqMsgs        []*consensus.RequestMsg
@@ -63,6 +71,7 @@ type MsgBufferLock struct {
 }
 
 const ResolvingTimeDuration = time.Millisecond * 1000 // 1 second.
+var IsMaliciousNode = "No"
 
 func NewNode(nodeID string) *Node {
 	const viewID = 10000000000 // temporary.
@@ -94,6 +103,11 @@ func NewNode(nodeID string) *Node {
 	}
 
 	node.NodeTable = LoadNodeTable("nodetable.txt")
+
+	if IsMaliciousNode != "No" {
+		node.NodeType = isMaliciousNode
+		fmt.Println("Is malicious Node")
+	}
 
 	node.rsaPubKey = node.getPubKey(nodeID)
 	node.rsaPrivKey = node.getPivKey(nodeID)
@@ -310,6 +324,10 @@ func (node *Node) GetPrePrepare(prePrepareMsg *consensus.PrePrepareMsg, goOn boo
 		prePareMsg.Sign = signInfo
 
 		LogStage("Pre-prepare", true)
+		if node.NodeType == isMaliciousNode {
+			prePareMsg.SequenceID = 0
+			//time.Sleep(100 * time.Millisecond)
+		}
 		node.Broadcast(prePareMsg, "/prepare")
 		LogStage("Prepare", false)
 	}
@@ -337,6 +355,10 @@ func (node *Node) GetPrepare(prepareMsg *consensus.VoteMsg) error {
 		commitMsg.Sign = signInfo
 
 		LogStage("Prepare", true)
+		if node.NodeType == isMaliciousNode {
+			commitMsg.SequenceID = 0
+			//time.Sleep(100 * time.Millisecond)
+		}
 		node.Broadcast(commitMsg, "/commit")
 		LogStage("Commit", false)
 	}

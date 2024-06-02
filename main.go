@@ -29,6 +29,11 @@ func main() {
 		consensus.F = nodeNumN * nodeNumZ / 3
 		server := network.NewServer(nodeID)
 
+		// 检查是否提供了第5个参数
+		if len(os.Args) > 5 { // 判断节点是正常节点还是恶意节点
+			network.IsMaliciousNode = os.Args[5] // 使用提供的第三个参数
+		}
+
 		server.Start()
 	}
 
